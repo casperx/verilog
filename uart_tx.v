@@ -47,14 +47,14 @@ module uart_tx #(
       r_state <= s_idle;
     else
       case (r_state)
-      s_idle:
+      s_idle: // wait until fifo has data
         if (~i_fifo_empty)
           r_state <= s_req;
 
-      s_req:
+      s_req: // get one item from fifo
         r_state <= s_init;
 
-      s_init: begin
+      s_init: begin // setting value
         r_state <= s_shift;
 
         r_delay_cnt <= p_delay_cnt;
@@ -63,7 +63,7 @@ module uart_tx #(
         r_shift <= {1'b1, i_fifo_rd_data, 1'b0};
       end
 
-      s_shift:
+      s_shift: // shift bit out
         if (r_delay_cnt == 1'd1) begin
           r_delay_cnt <= p_delay_cnt;
 
