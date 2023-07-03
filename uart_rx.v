@@ -64,9 +64,11 @@ module uart_rx #(
 
             r_delay_cnt <= p_delay_cnt;
             r_bit_cnt <= p_bit_cnt;
-          end else
+          end
+          else
             r_state <= s_idle;
-        end else
+        end
+        else
           r_delay_cnt <= r_delay_cnt - 1'd1; // count time
 
       s_data: // capture data bit
@@ -82,7 +84,8 @@ module uart_rx #(
             r_state <= s_stop;
           else
             r_bit_cnt <= r_bit_cnt - 1'd1;
-        end else
+        end
+        else
           r_delay_cnt <= r_delay_cnt - 1'd1;
 
       s_stop: // check stop bit
