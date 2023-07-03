@@ -10,8 +10,8 @@ module sar_adc #(
   output o_busy,
 
   // result port
-  output [p_bit_cnt - 1:0] o_res,
   output o_valid,
+  output [p_bit_cnt - 1:0] o_res,
 
   // ports for DAC and comparator
   output [p_bit_cnt - 1:0] o_dac,
@@ -32,38 +32,42 @@ module sar_adc #(
 
   wire w_last = r_res[0];
 
-  assign o_busy = r_state == s_samp | r_state == s_conv;
+  assign o_busy =
+    r_state == s_samp | 
+    r_state == s_conv;
 
-  assign o_res = r_res;
   assign o_valid = r_state == s_done;
+  assign o_res = r_res;
 
   assign o_dac = r_res | r_cur;
 
-  initial r_state <= s_idle;
+  initial
+    r_state <= s_idle;
 
   always @(posedge i_clk) begin
     if (i_reset)
       r_state <= s_idle;
-
     else
       case (r_state)
-        s_idle, s_done:
-          if (i_start)
-            r_state <= s_samp;
+      s_idle, s_done:
+        if (i_start)
+          r_state <= s_samp;
 
-        s_samp: begin
+      s_samp:
+        begin
           r_state <= s_conv;
           r_cur <= 1 << p_bit_cnt;
           r_res <= 0;
         end
 
-        s_conv: begin
-           if (i_cmp)
-             r_res <= r_res | r_cur;
-           if (w_last)
-             r_state <= s_done;
+      s_conv:
+        begin
+          if (i_cmp)
+            r_res <= r_res | r_cur;
+          if (w_last)
+            r_state <= s_done;
 
-           r_cur <= r_cur >> 1;
+          r_cur <= r_cur >> 1;
         end
       endcase
   end
