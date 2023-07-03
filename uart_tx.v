@@ -34,8 +34,8 @@ module uart_tx #(
   // number of clock cycles left until next event
   reg [$clog2(p_delay_cnt):0] r_delay_cnt;
 
-  // keep output high when not shifting
-  assign o_sig = r_state == s_shift ? r_shift[0] : 1'b1;
+  // connect output to shift register
+  assign o_sig = r_shift[0];
 
   assign o_fifo_rd_en = r_state == s_req;
 
@@ -43,8 +43,14 @@ module uart_tx #(
     r_state <= s_idle;
 
   always @(posedge i_clk) begin
-    if (i_rst)
+    if (i_rst) begin
       r_state <= s_idle;
+
+      // reset output
+      r_shift <= {
+        p_shift_cnt{1'b1}
+      };
+    end
     else
       case (r_state)
       s_idle: // wait until fifo has data
@@ -54,14 +60,15 @@ module uart_tx #(
       s_req: // get one item from fifo
         r_state <= s_init;
 
-      s_init: begin // setting value
-        r_state <= s_shift;
+      s_init: // setting value
+        begin
+          r_state <= s_shift;
 
-        r_delay_cnt <= p_delay_cnt;
-        r_shift_cnt <= p_shift_cnt;
+          r_delay_cnt <= p_delay_cnt;
+          r_shift_cnt <= p_shift_cnt;
 
-        r_shift <= {1'b1, i_fifo_rd_data, 1'b0};
-      end
+          r_shift <= {1'b1, i_fifo_rd_data, 1'b0};
+        end
 
       s_shift: // shift bit out
         if (r_delay_cnt == 1'd1) begin
@@ -76,7 +83,8 @@ module uart_tx #(
             r_state <= s_idle;
           else
             r_shift_cnt <= r_shift_cnt - 1'd1;
-        end else
+        end 
+        else
           r_delay_cnt <= r_delay_cnt - 1'd1;
       endcase
   end
